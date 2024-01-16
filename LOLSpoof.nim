@@ -2,6 +2,36 @@ import os
 import winim
 import rdstdin
 import strutils
+import strformat
+
+
+const banner = """
+ _     _____ _      _____                    __ 
+| |   |  _  | |    /  ___|                  / _|
+| |   | | | | |    \ `--. _ __   ___   ___ | |_ 
+| |   | | | | |     `--. \ '_ \ / _ \ / _ \|  _|
+| |___\ \_/ / |____/\__/ / |_) | (_) | (_) | |  
+\_____/\___/\_____/\____/| .__/ \___/ \___/|_|  
+                         | |                    
+                         |_|                    
+
+    An interactive shell to spoof some LOLBins
+    try !help
+"""
+
+const help = """    
+
+    !exit    -> Exit 
+    !cls     -> Clear the screen
+    !help    -> This help message
+"""
+
+const prompt = "[LOLSpoof] > "
+
+
+proc onexit() {.noconv.} =
+    quit(0)
+
 
 proc executeSpoofedLolbin(realCmdlineN: string): bool =
 
@@ -70,15 +100,42 @@ proc executeSpoofedLolbin(realCmdlineN: string): bool =
     return true
 
 
+proc handleSpecialCommand(cmd: string) =
+    if cmd == "!exit":
+        onexit()
+    elif cmd == "!cls":
+        discard execShellCmd("cls")
+    elif cmd == "!help":
+        echo help
+    else:
+        echo fmt"Could not parse command: {cmd}"
+
+
 when isMainModule:
+    # Handle Ctrl+C
+    setControlCHook(onexit)
+    # Print help
+    echo banner
     while true:
-        flushFile(stdin)
-        flushFile(stdout)
-        flushFile(stderr)
-        var cmdline = readLineFromStdin("[LOLSpoof] > ")
+        # Get and parse command
+        var cmdline = readLineFromStdin(prompt)
+        cmdline = cmdline.strip(trailing=false)
+        if cmdline == "":
+            continue 
+        # Handle special command  
+        if cmdline.startsWith("!"):
+            handleSpecialCommand(cmdline) 
+            continue    
         var cmdlineSeq = cmdline.split(" ")
+        # Find LOLBin and reconstruct commandline
         var binary = findExe(cmdlineSeq[0])
+        if binary == "":
+            echo fmt"Could not find binary: {cmdlineSeq[0]}"
+            continue
         cmdlineSeq[0] = binary
         cmdline = join(cmdlineSeq, " ")
-        var res = executeSpoofedLolbin(cmdline)
+        # Fire in the hole !
+        if not executeSpoofedLolbin(cmdline):
+            echo fmt"Could not spoof binary: {cmdlineSeq[0]}"
+
 

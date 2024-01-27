@@ -21,8 +21,8 @@ Process command line is a very monitored telemetry, being thoroughly inspected b
 7. Resumes the main thread
 
 ## Opsec considerations
-Although this simple technique helps with command line detection, it may introduce other suspicious telemetry:
-1. Creation pf suspended process
+Although this simple technique helps to bypass command line detection, it may introduce other suspicious telemetry:
+1. Creation of suspended process
 2. The new process has trailing spaces (but it's really easy to make it a repeated character or even random data instead)
 3. Write to the spawned process with WriteProcessMemory
 

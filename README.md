@@ -26,3 +26,11 @@ Although this simple technique helps with command line detection, it may introdu
 2. The new process has trailing spaces (but it's really easy to make it a repeated character or even random data instead)
 3. Write to the spawned process with WriteProcessMemory
 
+## Build
+Built with Nim 1.6.12 (compiling with Nim 2.X yields errors!)
+
+`nimble install winim`
+
+## Known issue
+Programs that clear or change the previous printed console messages (such as `timeout.exe 10`) breaks the program. when such commands are employed, you'll need to restart the console. 
+Don't know how to fix that, open to suggestions.
